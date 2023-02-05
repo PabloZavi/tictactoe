@@ -1,5 +1,6 @@
 import React, { useReducer } from 'react';
 import Board from './Board';
+import click from '../sound/click.mp3';
 
 //We define 'reducer' out of the function
 //accepts state and action as parameters
@@ -31,6 +32,7 @@ const reducer = (state, action) => {
 export default function Game() {
   //useReducer accept 2 parameters (the reducer function and
   //default states)
+
   const [state, dispatch] = useReducer(reducer, {
     //x is the default player
     xIsNext: true,
@@ -38,11 +40,16 @@ export default function Game() {
     //an array of 9 elements null
     history: [{ squares: Array(9).fill(null) }],
   });
+
+  //const [isPlayingSound, setIsPlayingSound] = useState(false);
   //from state we get 'xIsNext' and 'history'
   const { xIsNext, history } = state;
   const jumpTo = (step) => {
     dispatch({ type: 'JUMP', payload: { step } });
   };
+
+  const clickSound = new Audio(click);
+  
   const handleClick = (i) => {
     const current = history[history.length - 1];
     const squares = current.squares.slice();
@@ -51,6 +58,9 @@ export default function Game() {
     if (winner || squares[i]) {
       return;
     }
+    //We put after the last if the sound, because if we put the sound before,
+    //we could hear it even if it's already selected
+    clickSound.play();
     //or... we need to continue playing, filling with X or O...
     squares[i] = xIsNext ? 'X' : 'O';
     //after that we dispatch the MOVE action and set payload passing squares
@@ -81,14 +91,15 @@ export default function Game() {
   /* const squares = Array(9).fill(null); */
 
   return (
-    <div className={winner?"game disabled":"game"}>
+    <div className={winner ? 'game disabled' : 'game'}>
       <div className="game-board">
         {/* We pass data to a child component using props */}
         <Board
           onClick={(i) => handleClick(i)}
           squares={current.squares}
         ></Board>{' '}
-        {/* Importante, ver que se trae de current, se comentó la línea 'const squares'. current viene de la función 'handeclick' (history), y history viene de más arriba (state),  */}
+        {/* Important!, see what it take from current, it was commented the line 'const squares'. 
+        current comes from the function 'handeclick' (history), and history comes from the top (state),  */}
       </div>
       <div className="game-info">
         <div>{status}</div>
@@ -113,6 +124,7 @@ const calculateWinner = (squares) => {
   let isDraw = true;
   for (let i = 0; i < winnerLines.length; i++) {
     const [a, b, c] = winnerLines[i];
+
     if (squares[a] && squares[a] === squares[b] && squares[b] === squares[c]) {
       return squares[a];
     }
